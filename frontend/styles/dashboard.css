@@ -1,0 +1,80 @@
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: calc(100vh - 56px);
+}
+
+/* Sidebar */
+.sidebar {
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+}
+.sidebar-nav { list-style: none; }
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: background .15s;
+}
+.sidebar-nav a:hover,
+.sidebar-nav a.active {
+  background: var(--brand-light);
+  border-left-color: var(--brand);
+  color: var(--brand);
+  text-decoration: none;
+}
+
+/* Main content */
+.main-content { padding: 32px; }
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.page-header h1 { font-size: 24px; font-weight: 600; }
+
+/* Cards grid */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.card-tile {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  transition: box-shadow .2s;
+}
+.card-tile:hover { box-shadow: var(--shadow-lg); }
+.card-tile-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.card-tile-type   { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+.card-tile-name   { font-size: 16px; font-weight: 600; margin-top: 4px; }
+.card-tile-sub    { font-size: 13px; color: var(--text-muted); }
+.card-tile-actions{ display: flex; gap: 8px; margin-top: 16px; }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-state h2 { font-size: 18px; margin-bottom: 8px; }
+.empty-state p  { color: var(--text-muted); margin-bottom: 20px; }
+
+/* Stats row */
+.stats-row { display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+.stat-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 24px;
+  min-width: 140px;
+}
+.stat-card .stat-value { font-size: 28px; font-weight: 700; color: var(--brand); }
+.stat-card .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }

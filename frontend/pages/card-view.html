@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Business Card</title>
+  <link rel="stylesheet" href="../styles/global.css" />
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; background: var(--bg); }
+
+    .card-wrapper { width: 100%; max-width: 400px; }
+
+    .wallet-card {
+      width: 100%;
+      border-radius: 20px;
+      padding: 28px;
+      color: #fff;
+      box-shadow: 0 8px 32px rgba(0,0,0,.2);
+      position: relative;
+      overflow: hidden;
+      min-height: 200px;
+    }
+    .card-logo  { position: absolute; top: 24px; right: 24px; width: 56px; height: 56px; object-fit: contain; border-radius: 10px; background: rgba(255,255,255,.2); padding: 4px; }
+    .card-photo { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,255,255,.4); margin-bottom: 12px; }
+    .card-company { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; opacity: .75; }
+    .card-name    { font-size: 26px; font-weight: 700; margin-top: 6px; line-height: 1.2; }
+    .card-title   { font-size: 14px; opacity: .85; margin-top: 4px; }
+    .card-divider { border: none; border-top: 1px solid rgba(255,255,255,.25); margin: 18px 0; }
+    .card-detail  { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; opacity: .9; }
+    .card-detail a { color: inherit; text-decoration: none; }
+    .card-detail a:hover { text-decoration: underline; }
+
+    /* Stamps */
+    .stamps-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: .75; margin-top: 16px; margin-bottom: 8px; }
+    .stamps-grid  { display: flex; flex-wrap: wrap; gap: 6px; }
+    .stamp { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(255,255,255,.5); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .stamp.filled { background: rgba(255,255,255,.3); }
+
+    /* Actions below card */
+    .actions { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .btn-save-contact { background: var(--white); color: var(--text); border: 1px solid var(--border); }
+    .btn-save-contact:hover { background: var(--bg); }
+
+    .loading { text-align: center; color: var(--text-muted); padding: 60px; }
+    .error-box { text-align: center; padding: 40px; }
+    .error-box h2 { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div class="card-wrapper" id="root">
+    <div class="loading">Loading card...</div>
+  </div>
+
+  <script type="module">
+    import { API_BASE, MEDIA_BASE } from '../js/config.js';
+
+    function getParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    function buildVCard(card) {
+      return [
+        'BEGIN:VCARD',
+        'VERSION:3.0',
+        `FN:${card.name}`,
+        card.title   ? `TITLE:${card.title}`   : '',
+        card.company ? `ORG:${card.company}`   : '',
+        card.email   ? `EMAIL:${card.email}`   : '',
+        card.phone   ? `TEL:${card.phone}`     : '',
+        card.website ? `URL:${card.website}`   : '',
+        'END:VCARD',
+      ].filter(Boolean).join('\r\n');
+    }
+
+    function downloadVCard(card) {
+      const blob = new Blob([buildVCard(card)], { type: 'text/vcard' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `${card.name.replace(/\s+/g, '_')}.vcf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function load() {
+      const id = getParam('id');
+      if (!id) {
+        document.getElementById('root').innerHTML = `<div class="error-box"><h2>No card ID</h2><p>This link is missing the card ID.</p></div>`;
+        return;
+      }
+
+      let card;
+      try {
+        const res  = await fetch(`${API_BASE}/cards/${id}/public`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Not found');
+        card = data.card;
+      } catch (err) {
+        document.getElementById('root').innerHTML = `<div class="error-box"><h2>Card not found</h2><p>${err.message}</p></div>`;
+        return;
+      }
+
+      const isLoyalty = card.type === 'loyalty';
+      document.title = `${card.name}${card.company ? ' — ' + card.company : ''}`;
+
+      const stampsHtml = isLoyalty ? `
+        <div class="stamps-label">Stamp card (${card.stamps_current || 0} / ${card.stamps_total || 10})</div>
+        <div class="stamps-grid">
+          ${Array.from({ length: card.stamps_total || 10 }).map((_, i) =>
+            `<div class="stamp${i < (card.stamps_current || 0) ? ' filled' : ''}">
+               ${i < (card.stamps_current || 0) ? '✓' : ''}
+             </div>`
+          ).join('')}
+        </div>` : '';
+
+      document.getElementById('root').innerHTML = `
+        <div class="wallet-card" style="background: ${card.color || '#1a73e8'}">
+          ${card.logo_url  ? `<img class="card-logo"  src="${MEDIA_BASE}${card.logo_url}"  alt="logo" />` : ''}
+          ${card.photo_url ? `<img class="card-photo" src="${MEDIA_BASE}${card.photo_url}" alt="photo" />` : ''}
+          ${card.company   ? `<div class="card-company">${card.company}</div>` : ''}
+          <div class="card-name">${card.name}</div>
+          ${card.title     ? `<div class="card-title">${card.title}</div>` : ''}
+
+          ${card.email || card.phone || card.website ? '<hr class="card-divider" />' : ''}
+          ${card.email   ? `<div class="card-detail">✉ <a href="mailto:${card.email}">${card.email}</a></div>` : ''}
+          ${card.phone   ? `<div class="card-detail">📞 <a href="tel:${card.phone}">${card.phone}</a></div>` : ''}
+          ${card.website ? `<div class="card-detail">🌐 <a href="${card.website}" target="_blank">${card.website.replace(/^https?:\/\//, '')}</a></div>` : ''}
+          ${stampsHtml}
+        </div>
+
+        <div class="actions">
+          ${!isLoyalty ? `<button class="btn btn-save-contact btn-full" id="vcf-btn">📇 Save contact</button>` : ''}
+          <a href="signup.html" class="btn btn-primary btn-full" style="text-align:center">Create your own card →</a>
+        </div>
+      `;
+
+      document.getElementById('vcf-btn')?.addEventListener('click', () => downloadVCard(card));
+    }
+
+    load();
+  </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log in — BizCard Wallet</title>
+  <link rel="stylesheet" href="../styles/global.css" />
+  <style>
+    .auth-wrapper { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    .auth-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 40px; width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); }
+    .auth-card h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .auth-card .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; }
+    .auth-footer { margin-top: 20px; text-align: center; font-size: 14px; color: var(--text-muted); }
+    .brand-link { display: block; text-align: center; margin-bottom: 24px; font-size: 20px; font-weight: 700; color: var(--brand); }
+  </style>
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <a href="../pages/index.html" class="brand-link">BizCard Wallet</a>
+      <h1>Welcome back</h1>
+      <p class="subtitle">Log in to manage your cards</p>
+
+      <div id="error-msg" class="alert alert-error hidden"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="you@company.com" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="••••••••" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full mt-8" id="submit-btn">Log in</button>
+      </form>
+
+      <p class="auth-footer">No account? <a href="signup.html">Sign up free</a></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { handleLogin, redirectIfLoggedIn } from '../js/auth.js';
+    import { showError, setLoading } from '../js/utils.js';
+
+    redirectIfLoggedIn();
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      setLoading(btn, true);
+      try {
+        await handleLogin(
+          document.getElementById('email').value,
+          document.getElementById('password').value
+        );
+      } catch (err) {
+        showError('error-msg', err.message);
+        setLoading(btn, false);
+      }
+    });
+  </script>
+</body>
+</html>

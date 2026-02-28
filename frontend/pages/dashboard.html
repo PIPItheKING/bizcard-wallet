@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — BizCard Wallet</title>
+  <link rel="stylesheet" href="../styles/global.css" />
+  <link rel="stylesheet" href="../styles/dashboard.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <span class="navbar-brand">BizCard Wallet</span>
+    <div class="navbar-actions">
+      <span id="user-name" class="text-muted"></span>
+      <button class="btn btn-secondary btn-sm" id="logout-btn">Log out</button>
+    </div>
+  </nav>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <ul class="sidebar-nav">
+        <li><a href="dashboard.html" class="active">📋 My Cards</a></li>
+        <li><a href="card-builder.html">✨ New Card</a></li>
+        <li><a href="#">⚙️ Settings</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <div class="page-header">
+        <h1>My Cards</h1>
+        <a href="card-builder.html" class="btn btn-primary">+ New card</a>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-total">—</div>
+          <div class="stat-label">Total cards</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-business">—</div>
+          <div class="stat-label">Business cards</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-loyalty">—</div>
+          <div class="stat-label">Loyalty cards</div>
+        </div>
+      </div>
+
+      <!-- Cards grid -->
+      <div id="cards-grid" class="cards-grid"></div>
+
+      <!-- Empty state -->
+      <div id="empty-state" class="empty-state hidden">
+        <h2>No cards yet</h2>
+        <p>Create your first business or loyalty card to get started.</p>
+        <a href="card-builder.html" class="btn btn-primary">Create a card</a>
+      </div>
+
+      <div id="loading" class="text-muted text-center mt-24">Loading...</div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { requireLogin, getUser, logout } from '../js/auth.js';
+    import { cards } from '../js/api.js';
+    import { MEDIA_BASE } from '../js/config.js';
+    import { formatDate } from '../js/utils.js';
+
+    requireLogin();
+
+    const user = getUser();
+    if (user) document.getElementById('user-name').textContent = user.name;
+    document.getElementById('logout-btn').addEventListener('click', logout);
+
+    async function loadCards() {
+      try {
+        const { cards: list } = await cards.list();
+        document.getElementById('loading').classList.add('hidden');
+
+        document.getElementById('stat-total').textContent    = list.length;
+        document.getElementById('stat-business').textContent = list.filter(c => c.type === 'business').length;
+        document.getElementById('stat-loyalty').textContent  = list.filter(c => c.type === 'loyalty').length;
+
+        if (list.length === 0) {
+          document.getElementById('empty-state').classList.remove('hidden');
+          return;
+        }
+
+        const grid = document.getElementById('cards-grid');
+        grid.innerHTML = list.map(card => `
+          <div class="card-tile">
+            <div class="card-tile-header">
+              <div>
+                <div class="card-tile-type">${card.type === 'loyalty' ? '🎯 Loyalty' : '💳 Business'}</div>
+                <div class="card-tile-name">${card.name}</div>
+                <div class="card-tile-sub">${card.company || card.title || ''}</div>
+              </div>
+              ${card.logo_url ? `<img src="${MEDIA_BASE}${card.logo_url}" style="width:40px;height:40px;object-fit:contain;border-radius:8px;" />` : ''}
+            </div>
+            <div class="text-muted" style="font-size:12px">Created ${formatDate(card.created_at)}</div>
+            <div class="card-tile-actions">
+              <a href="card-builder.html?id=${card.id}" class="btn btn-secondary btn-sm">Edit</a>
+              <button class="btn btn-secondary btn-sm" onclick="deleteCard(${card.id})">Delete</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        document.getElementById('loading').textContent = 'Failed to load cards: ' + err.message;
+      }
+    }
+
+    window.deleteCard = async (id) => {
+      if (!confirm('Delete this card?')) return;
+      await cards.remove(id);
+      loadCards();
+    };
+
+    loadCards();
+  </script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BizCard Wallet — Digital Business Cards for Google Wallet</title>
+  <link rel="stylesheet" href="../styles/global.css" />
+  <style>
+    .hero { max-width: 680px; margin: 80px auto; text-align: center; padding: 0 24px; }
+    .hero h1 { font-size: 42px; font-weight: 800; line-height: 1.2; margin-bottom: 16px; }
+    .hero h1 span { color: var(--brand); }
+    .hero p  { font-size: 18px; color: var(--text-muted); margin-bottom: 36px; }
+    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; max-width: 900px; margin: 60px auto; padding: 0 24px; }
+    .feature-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+    .feature-card .icon { font-size: 28px; margin-bottom: 12px; }
+    .feature-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .feature-card p { font-size: 14px; color: var(--text-muted); }
+    footer { text-align: center; padding: 40px; color: var(--text-muted); font-size: 13px; border-top: 1px solid var(--border); margin-top: 60px; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <span class="navbar-brand">BizCard Wallet</span>
+    <div class="navbar-actions">
+      <a href="login.html" class="btn btn-secondary btn-sm">Log in</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">Get started</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <h1>Your business card,<br /><span>in Google Wallet</span></h1>
+    <p>Create professional digital business cards and loyalty cards that live right in your customers' Google Wallet. Share with a tap or a QR code.</p>
+    <div class="hero-actions">
+      <a href="signup.html" class="btn btn-primary">Create your card — free</a>
+      <a href="#features" class="btn btn-secondary">See how it works</a>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <div class="feature-card">
+      <div class="icon">💳</div>
+      <h3>Google Wallet ready</h3>
+      <p>One click to add your business card directly to any Android user's Google Wallet.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🎯</div>
+      <h3>Loyalty cards</h3>
+      <p>Build stamp cards that keep customers coming back — track punches right in the wallet pass.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📲</div>
+      <h3>QR code sharing</h3>
+      <p>Every card gets a QR code so anyone can scan and save it, even without the app.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🎨</div>
+      <h3>Branded design</h3>
+      <p>Upload your logo, choose your brand color, and make your card uniquely yours.</p>
+    </div>
+  </section>
+
+  <footer>
+    &copy; 2025 BizCard Wallet &mdash; <a href="#">Privacy</a> &middot; <a href="#">Terms</a>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Card Builder — BizCard Wallet</title>
+  <link rel="stylesheet" href="../styles/global.css" />
+  <link rel="stylesheet" href="../styles/card-builder.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <span class="navbar-brand">BizCard Wallet</span>
+    <div class="navbar-actions">
+      <a href="dashboard.html" class="btn btn-secondary btn-sm">← Back to dashboard</a>
+    </div>
+  </nav>
+
+  <div class="builder-layout">
+    <!-- Form panel -->
+    <div class="builder-form">
+      <h2 id="form-title">New Card</h2>
+      <div id="save-msg" class="alert alert-success hidden">Card saved!</div>
+      <div id="error-msg" class="alert alert-error hidden"></div>
+
+      <!-- Card type -->
+      <div class="form-group">
+        <label for="card-type">Card type</label>
+        <select id="card-type">
+          <option value="business">💳 Business card</option>
+          <option value="loyalty">🎯 Loyalty / stamp card</option>
+        </select>
+      </div>
+
+      <div class="section-title">Identity</div>
+      <div class="form-group">
+        <label for="field-name">Full name *</label>
+        <input type="text" id="field-name" placeholder="Jane Smith" required />
+      </div>
+      <div class="form-group">
+        <label for="field-title">Job title</label>
+        <input type="text" id="field-title" placeholder="Founder & CEO" />
+      </div>
+      <div class="form-group">
+        <label for="field-company">Company</label>
+        <input type="text" id="field-company" placeholder="Acme Corp" />
+      </div>
+
+      <div class="section-title">Contact</div>
+      <div class="form-group">
+        <label for="field-email">Email</label>
+        <input type="email" id="field-email" placeholder="jane@acme.com" />
+      </div>
+      <div class="form-group">
+        <label for="field-phone">Phone</label>
+        <input type="tel" id="field-phone" placeholder="+1 555 000 0000" />
+      </div>
+      <div class="form-group">
+        <label for="field-website">Website</label>
+        <input type="url" id="field-website" placeholder="https://acme.com" />
+      </div>
+
+      <div class="section-title">Branding</div>
+      <div class="form-group">
+        <label>Brand color</label>
+        <div class="color-row">
+          <input type="color" id="field-color" value="#1a73e8" />
+          <span id="color-label" class="text-muted">#1a73e8</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Company logo</label>
+        <div class="upload-zone" id="logo-zone">
+          <input type="file" id="logo-input" accept="image/*" />
+          <img id="logo-preview" class="upload-preview hidden" />
+          <div id="logo-placeholder">
+            <div>📷</div>
+            <div class="text-muted mt-8">Click to upload logo (max 5MB)</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Profile photo</label>
+        <div class="upload-zone" id="photo-zone">
+          <input type="file" id="photo-input" accept="image/*" />
+          <img id="photo-preview" class="upload-preview hidden" />
+          <div id="photo-placeholder">
+            <div>🤳</div>
+            <div class="text-muted mt-8">Click to upload photo (max 5MB)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loyalty-only section -->
+      <div id="loyalty-section" class="hidden">
+        <div class="section-title">Loyalty settings</div>
+        <div class="form-group">
+          <label for="field-stamps">Total stamps to complete card</label>
+          <input type="number" id="field-stamps" value="10" min="2" max="30" />
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full mt-16" id="save-btn">Save card</button>
+    </div>
+
+    <!-- Preview panel -->
+    <div class="builder-preview">
+      <p class="preview-label">Live preview</p>
+
+      <!-- Business card preview -->
+      <div id="preview-business">
+        <div class="wallet-card" id="card-visual" style="background: #1a73e8">
+          <img id="prev-logo" class="card-logo hidden" />
+          <div class="card-company" id="prev-company"></div>
+          <div class="card-name"   id="prev-name">Your Name</div>
+          <div class="card-title"  id="prev-title"></div>
+          <div class="card-details">
+            <span id="prev-email"></span>
+            <span id="prev-phone"></span>
+            <span id="prev-website"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loyalty card preview -->
+      <div id="preview-loyalty" class="hidden">
+        <div class="wallet-card" id="loyalty-visual" style="background: #1a73e8">
+          <img id="lprev-logo" class="card-logo hidden" />
+          <div class="card-company" id="lprev-company"></div>
+          <div class="card-name"   id="lprev-name">Your Name</div>
+          <div class="card-title">Stamp card</div>
+          <div class="stamps-grid" id="stamps-grid"></div>
+        </div>
+      </div>
+
+      <!-- Action buttons (shown after save) -->
+      <div class="preview-actions" id="preview-actions" style="display:none">
+        <button class="btn btn-wallet" id="wallet-btn">
+          <span>Add to Google Wallet</span>
+        </button>
+        <button class="btn btn-secondary" id="qr-btn">📲 Show QR code</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Modal -->
+  <div id="qr-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>Scan to save card</h3>
+      <img id="qr-image" />
+      <p class="share-url" id="share-url"></p>
+      <button class="btn btn-secondary btn-full mt-16" onclick="document.getElementById('qr-modal').classList.add('hidden')">Close</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireLogin } from '../js/auth.js';
+    import { cards, passes, qr } from '../js/api.js';
+    import { MEDIA_BASE } from '../js/config.js';
+    import { showError, hideError, setLoading, getParam } from '../js/utils.js';
+
+    requireLogin();
+
+    const editId = getParam('id');
+    let cardId = editId ? parseInt(editId) : null;
+    let pendingLogoFile  = null;
+    let pendingPhotoFile = null;
+
+    if (editId) {
+      document.getElementById('form-title').textContent = 'Edit Card';
+      cards.get(editId).then(({ card }) => {
+        document.getElementById('card-type').value     = card.type;
+        document.getElementById('field-name').value    = card.name    || '';
+        document.getElementById('field-title').value   = card.title   || '';
+        document.getElementById('field-company').value = card.company || '';
+        document.getElementById('field-email').value   = card.email   || '';
+        document.getElementById('field-phone').value   = card.phone   || '';
+        document.getElementById('field-website').value = card.website || '';
+        document.getElementById('field-color').value   = card.color   || '#1a73e8';
+        document.getElementById('field-stamps').value  = card.stamps_total || 10;
+        if (card.logo_url)  showImagePreview('logo',  `${MEDIA_BASE}${card.logo_url}`);
+        if (card.photo_url) showImagePreview('photo', `${MEDIA_BASE}${card.photo_url}`);
+        updatePreview();
+        toggleCardType();
+        document.getElementById('preview-actions').style.display = 'flex';
+      });
+    }
+
+    // Live preview
+    function updatePreview() {
+      const name    = document.getElementById('field-name').value    || 'Your Name';
+      const title   = document.getElementById('field-title').value   || '';
+      const company = document.getElementById('field-company').value || '';
+      const email   = document.getElementById('field-email').value   || '';
+      const phone   = document.getElementById('field-phone').value   || '';
+      const website = document.getElementById('field-website').value || '';
+      const color   = document.getElementById('field-color').value;
+      const stamps  = parseInt(document.getElementById('field-stamps').value) || 10;
+
+      document.getElementById('color-label').textContent = color;
+      document.getElementById('card-visual').style.background   = color;
+      document.getElementById('loyalty-visual').style.background = color;
+
+      // Business preview
+      document.getElementById('prev-name').textContent    = name;
+      document.getElementById('prev-title').textContent   = title;
+      document.getElementById('prev-company').textContent = company;
+      document.getElementById('prev-email').textContent   = email;
+      document.getElementById('prev-phone').textContent   = phone;
+      document.getElementById('prev-website').textContent = website;
+
+      // Loyalty preview
+      document.getElementById('lprev-name').textContent    = name;
+      document.getElementById('lprev-company').textContent = company;
+      const grid = document.getElementById('stamps-grid');
+      grid.innerHTML = Array.from({ length: stamps }).map((_, i) =>
+        `<div class="stamp">${i < 3 ? '✓' : ''}</div>`
+      ).join('');
+    }
+
+    function toggleCardType() {
+      const type = document.getElementById('card-type').value;
+      document.getElementById('preview-business').classList.toggle('hidden', type !== 'business');
+      document.getElementById('preview-loyalty').classList.toggle('hidden',  type !== 'loyalty');
+      document.getElementById('loyalty-section').classList.toggle('hidden',  type !== 'loyalty');
+    }
+
+    // Event listeners for live preview
+    ['field-name','field-title','field-company','field-email','field-phone','field-website','field-color','field-stamps']
+      .forEach(id => document.getElementById(id).addEventListener('input', updatePreview));
+    document.getElementById('card-type').addEventListener('change', () => { toggleCardType(); updatePreview(); });
+
+    updatePreview();
+
+    // Image upload helpers
+    function showImagePreview(which, url) {
+      const preview = document.getElementById(`${which}-preview`);
+      const placeholder = document.getElementById(`${which}-placeholder`);
+      preview.src = url;
+      preview.classList.remove('hidden');
+      placeholder.classList.add('hidden');
+      // Also show in card preview
+      const logoEls = document.querySelectorAll(`#prev-logo, #lprev-logo`);
+      if (which === 'logo') logoEls.forEach(el => { el.src = url; el.classList.remove('hidden'); });
+    }
+
+    document.getElementById('logo-input').addEventListener('change', (e) => {
+      pendingLogoFile = e.target.files[0];
+      if (pendingLogoFile) showImagePreview('logo', URL.createObjectURL(pendingLogoFile));
+    });
+    document.getElementById('photo-input').addEventListener('change', (e) => {
+      pendingPhotoFile = e.target.files[0];
+      if (pendingPhotoFile) showImagePreview('photo', URL.createObjectURL(pendingPhotoFile));
+    });
+
+    // Save
+    document.getElementById('save-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('save-btn');
+      hideError('error-msg');
+      setLoading(btn, true);
+
+      const payload = {
+        type:         document.getElementById('card-type').value,
+        name:         document.getElementById('field-name').value,
+        title:        document.getElementById('field-title').value,
+        company:      document.getElementById('field-company').value,
+        email:        document.getElementById('field-email').value,
+        phone:        document.getElementById('field-phone').value,
+        website:      document.getElementById('field-website').value,
+        color:        document.getElementById('field-color').value,
+        stamps_total: parseInt(document.getElementById('field-stamps').value) || 10,
+      };
+
+      if (!payload.name) { showError('error-msg', 'Name is required'); setLoading(btn, false); return; }
+
+      try {
+        let card;
+        if (cardId) {
+          ({ card } = await cards.update(cardId, payload));
+        } else {
+          ({ card } = await cards.create(payload));
+          cardId = card.id;
+        }
+
+        if (pendingLogoFile)  await cards.uploadLogo(cardId,  pendingLogoFile);
+        if (pendingPhotoFile) await cards.uploadPhoto(cardId, pendingPhotoFile);
+
+        document.getElementById('save-msg').classList.remove('hidden');
+        document.getElementById('preview-actions').style.display = 'flex';
+        setTimeout(() => document.getElementById('save-msg').classList.add('hidden'), 3000);
+      } catch (err) {
+        showError('error-msg', err.message);
+      } finally {
+        setLoading(btn, false);
+      }
+    });
+
+    // Add to Google Wallet
+    document.getElementById('wallet-btn').addEventListener('click', async () => {
+      if (!cardId) return;
+      const btn = document.getElementById('wallet-btn');
+      setLoading(btn, true);
+      try {
+        const { addToWalletUrl } = await passes.generate(cardId);
+        window.open(addToWalletUrl, '_blank');
+      } catch (err) {
+        showError('error-msg', err.message);
+      } finally {
+        setLoading(btn, false);
+      }
+    });
+
+    // QR code
+    document.getElementById('qr-btn').addEventListener('click', async () => {
+      if (!cardId) return;
+      try {
+        const { qrDataUrl, shareUrl } = await qr.get(cardId);
+        document.getElementById('qr-image').src  = qrDataUrl;
+        document.getElementById('share-url').textContent = shareUrl;
+        document.getElementById('qr-modal').classList.remove('hidden');
+      } catch (err) {
+        showError('error-msg', err.message);
+      }
+    });
+  </script>
+</body>
+</html>

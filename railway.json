@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "cd backend && npm install && npx prisma db push && node src/app.js",
+    "startCommand": "cd backend && mkdir -p data && mkdir -p ../uploads && npm install && npx prisma db push && node src/app.js",
     "restartPolicyType": "ON_FAILURE"
   }
 }
